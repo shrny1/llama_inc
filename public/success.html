@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome to Premium — Llama Inc.</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="nav">
+      <a class="logo" href="/" style="color:inherit;text-decoration:none"><span class="logo-mark">✈</span> Llama Inc.</a>
+    </header>
+
+    <div class="center-card">
+      <div class="check">✓</div>
+      <h1 id="title">Checking your subscription…</h1>
+      <p id="detail"></p>
+
+      <form action="/create-portal-session" method="POST" id="portal-form" style="display:none">
+        <input type="hidden" name="session_id" id="session-id" />
+        <button class="btn" type="submit">Manage or cancel subscription</button>
+      </form>
+      <a class="link" href="/">Back to Llama Inc.</a>
+    </div>
+  </div>
+
+  <script>
+    const sessionId = new URLSearchParams(location.search).get('session_id');
+    const title = document.getElementById('title');
+    const detail = document.getElementById('detail');
+
+    if (!sessionId) {
+      title.textContent = 'No checkout session found';
+    } else {
+      fetch('/session-status?session_id=' + encodeURIComponent(sessionId))
+        .then((r) => r.json())
+        .then((s) => {
+          if (s.error) throw new Error(s.error);
+          if (s.status === 'complete') {
+            title.textContent = "You're on Premium!";
+            detail.textContent =
+              (s.email ? `A receipt is on its way to ${s.email}. ` : '') +
+              `Subscription status: ${s.subscriptionStatus || 'processing'}.`;
+            document.getElementById('session-id').value = sessionId;
+            document.getElementById('portal-form').style.display = 'block';
+          } else {
+            title.textContent = 'Payment not finished yet';
+            detail.textContent = `Checkout status: ${s.status}.`;
+          }
+        })
+        .catch((err) => {
+          title.textContent = 'Could not confirm your subscription';
+          detail.textContent = err.message;
+        });
+    }
+  </script>
+</body>
+</html>

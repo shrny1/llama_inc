@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Llama Inc. — Your AI travel planner</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="nav">
+      <div class="logo"><span class="logo-mark">✈</span> Llama Inc.</div>
+      <a href="#pricing">Pricing</a>
+    </header>
+
+    <div id="banner" class="banner"></div>
+
+    <section class="hero">
+      <div>
+        <h1>Plan the whole trip in one conversation.</h1>
+        <p class="lead">Llama is a digital travel assistant that turns your dates, budget and tastes into a day-by-day itinerary, for trips anywhere in the world.</p>
+        <a class="btn" style="width:auto" href="#pricing">See plans</a>
+      </div>
+      <div class="hero-card">
+        <div class="chat">
+          <div class="bubble user">5 days in Lisbon in May, mid budget, love food and old neighborhoods.</div>
+          <div class="bubble bot">Here's a plan: Alfama on day 1, a Sintra day trip on day 3, and three dinner spots locals book ahead. Want me to swap anything?</div>
+          <div class="bubble user">Swap Sintra for something by the coast.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="feature"><h3>Built around you</h3><p>Pace, budget, diet and interests shape every day of the plan.</p></div>
+      <div class="feature"><h3>Many sources, one plan</h3><p>Openings, transit times and reviews pulled together in one place.</p></div>
+      <div class="feature"><h3>Change on the go</h3><p>Rain, a closure or a late flight? Ask Llama to rework the day.</p></div>
+    </section>
+
+    <section class="pricing" id="pricing">
+      <h2>Pick your plan</h2>
+      <p class="sub">Start free. Upgrade when you want fully customized trips.</p>
+
+      <div class="plans">
+        <div class="plan">
+          <h3>Free</h3>
+          <p class="desc">Quick suggestions and sample itineraries.</p>
+          <div class="price">$0 <small>/ month</small></div>
+          <ul>
+            <li>3 trip ideas per month</li>
+            <li>Standard itineraries</li>
+          </ul>
+          <span class="btn ghost">Your current plan</span>
+        </div>
+
+        <div class="plan featured">
+          <h3 id="plan-name">Premium</h3>
+          <p class="desc" id="plan-desc">Loading plan details…</p>
+          <div class="price" id="plan-price">&nbsp;</div>
+          <ul>
+            <li>Unlimited custom itineraries</li>
+            <li>Day-by-day replanning</li>
+            <li>Cancel any time</li>
+          </ul>
+          <form action="/create-checkout-session" method="POST">
+            <button class="btn" id="subscribe-btn" type="submit" disabled>Subscribe</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="testnote">
+        <strong>This is a demo running in Stripe test mode. No real money moves.</strong><br />
+        To try it, pay with card <code>4242 4242 4242 4242</code>, any future expiry date, any CVC and any postal code.
+      </div>
+    </section>
+
+    <footer>Llama Inc. is a fictional company built for a Stripe Checkout demo.</footer>
+  </div>
+
+  <script>
+    // Show messages passed back from the server or from Checkout.
+    const params = new URLSearchParams(location.search);
+    const banner = document.getElementById('banner');
+    if (params.get('canceled')) {
+      banner.textContent = 'Checkout was canceled. You have not been charged.';
+      banner.className = 'banner warn show';
+    } else if (params.get('error')) {
+      banner.textContent = 'Something went wrong: ' + params.get('error');
+      banner.className = 'banner warn show';
+    }
+
+    // Fill the Premium card from the live Stripe price, so the page always
+    // matches what Checkout charges.
+    fetch('/config')
+      .then((r) => r.json())
+      .then((cfg) => {
+        if (cfg.error) throw new Error(cfg.error);
+        const amount = new Intl.NumberFormat(undefined, {
+          style: 'currency',
+          currency: cfg.currency.toUpperCase(),
+        }).format(cfg.unitAmount / 100);
+        const every = cfg.intervalCount > 1 ? `${cfg.intervalCount} ${cfg.interval}s` : cfg.interval;
+        document.getElementById('plan-name').textContent = cfg.name;
+        document.getElementById('plan-desc').textContent = cfg.description || '';
+        document.getElementById('plan-price').innerHTML = `${amount} <small>/ ${every}</small>`;
+        document.getElementById('subscribe-btn').disabled = false;
+      })
+      .catch((err) => {
+        document.getElementById('plan-desc').textContent = 'Could not load plan details: ' + err.message;
+      });
+  </script>
+</body>
+</html>
